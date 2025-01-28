@@ -21,21 +21,22 @@ def die(errmsg):
     sys.exit(1)
 
 
-def downloadfile(url, filename):
+def downloadfile(url, filename, timeout):
     with open(filename, 'wb') as f:
         c = pycurl.Curl()
         c.setopt(c.URL, url)
+        c.setopt(c.TIMEOUT, timeout)
         c.setopt(c.WRITEDATA, f)
         c.perform()
         c.close()
 
-def downloader(urls):
+def downloader(urls, default_timeout):
     for dl in urls:
         thisdl = urls[dl]
         url = thisdl['url']
         # get filename from URL if not supplied
         urlfile = thisdl.get('filename', url.split('/')[-1])
-        downloadfile(url, urlfile)
+        downloadfile(url, urlfile, default_timeout)
 
 
 def loadurls(urlfile):
@@ -50,7 +51,7 @@ def loadurls(urlfile):
 def main():
     args = getargs()
     urls = loadurls(args.urlfile)
-    downloader(urls)
+    downloader(urls, args.timeout)
 
 
 if __name__ == '__main__':
