@@ -3,9 +3,12 @@
 # slowdownloader.py - download files with long timeout
 
 import argparse
+import os
 import pycurl
 import sys
 import yaml
+
+DEBUG=False
 
 def getargs():
     '''parse CL args'''
@@ -25,6 +28,7 @@ def downloadfile(url, filename, timeout):
     with open(filename, 'wb') as f:
         c = pycurl.Curl()
         c.setopt(c.URL, url)
+        c.setopt(c.USERAGENT, 'curl/7.45.0')
         c.setopt(c.TIMEOUT, timeout)
         c.setopt(c.WRITEDATA, f)
         c.perform()
@@ -34,6 +38,8 @@ def downloader(urls, default_timeout):
     for dl in urls:
         thisdl = urls[dl]
         url = thisdl['url']
+        if DEBUG:
+            print('DEBUG: URL %s' % url)
         # get filename from URL if not supplied
         urlfile = thisdl.get('filename', url.split('/')[-1])
         downloadfile(url, urlfile, default_timeout)
@@ -49,6 +55,10 @@ def loadurls(urlfile):
 
 
 def main():
+    global DEBUG
+    if os.getenv('SLDEBUG'):
+        print('DEBUG active')
+        DEBUG = True
     args = getargs()
     urls = loadurls(args.urlfile)
     downloader(urls, args.timeout)
