@@ -16,6 +16,7 @@ def getargs():
     parser.add_argument("-f", "--urlfile",  help="YAML URL file")
     parser.add_argument("-t", "--timeout", help="timeout (secs)",
 						type=int, default=300)
+    parser.add_argument("--ipv4", action="store_true", help="force IPv4")
     args = parser.parse_args()
     return args
 
@@ -24,9 +25,11 @@ def die(errmsg):
     sys.exit(1)
 
 
-def downloadfile(url, filename, timeout):
+def downloadfile(url, filename, timeout, ipv4):
     with open(filename, 'wb') as f:
         c = pycurl.Curl()
+        if ipv4:
+            c.setopt(c.IPRESOLVE, c.IPRESOLVE_V4)
         c.setopt(c.URL, url)
         c.setopt(c.USERAGENT, 'curl/7.45.0')
         c.setopt(c.TIMEOUT, timeout)
@@ -34,7 +37,7 @@ def downloadfile(url, filename, timeout):
         c.perform()
         c.close()
 
-def downloader(urls, default_timeout):
+def downloader(urls, default_timeout, ipv4):
     for dl in urls:
         thisdl = urls[dl]
         url = thisdl['url']
@@ -42,7 +45,7 @@ def downloader(urls, default_timeout):
             print('DEBUG: URL %s' % url)
         # get filename from URL if not supplied
         urlfile = thisdl.get('filename', url.split('/')[-1])
-        downloadfile(url, urlfile, default_timeout)
+        downloadfile(url, urlfile, default_timeout, ipv4)
 
 
 def loadurls(urlfile):
@@ -61,7 +64,7 @@ def main():
         DEBUG = True
     args = getargs()
     urls = loadurls(args.urlfile)
-    downloader(urls, args.timeout)
+    downloader(urls, args.timeout, args.ipv4)
 
 
 if __name__ == '__main__':
